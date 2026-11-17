@@ -16,3 +16,5 @@ header{display:flex;justify-content:space-between;align-items:center;height:56px
 .dial{cursor:ns-resize;touch-action:none;user-select:none}.dial:focus-visible{outline:2px solid var(--accent);outline-offset:4px}.dial:hover{border-color:#8a8a8a}
 
 .spatial-mode-label{display:block;color:var(--muted);margin:24px 0 8px}#spatial-mode{font-size:16px;padding:10px;border:1px solid #333;border-radius:7px;width:100%;max-width:100%}.spatial-width{margin-top:25px}.spatial-note{font-size:12px;line-height:1.6;color:var(--muted);margin-top:28px;max-width:48ch}.tab-bar{gap:24px}input:disabled{cursor:default;opacity:.4}
+
+.site-button{float:none;margin:0 0 10px}.preset-library{margin-bottom:12px;background:#101010;border:1px solid #333;border-radius:8px;padding:10px}.preset-library summary{font-size:12px;cursor:pointer;color:var(--ink)}.preset-library .preset-manager{margin-top:12px}

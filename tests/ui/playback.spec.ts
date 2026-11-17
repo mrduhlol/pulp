@@ -5,6 +5,7 @@ test('real Chromium Web Audio processes a playing media element without silence'
  await page.evaluate(()=>{
   const Native=window.AudioContext;
   (window as any).AudioContext=class extends Native{
+   constructor(){super({sinkId:{type:'none'}} as any);}
    createDynamicsCompressor(){const node=super.createDynamicsCompressor();const analyser=this.createAnalyser();node.connect(analyser);(window as any).meter=analyser;return node;}
   };
   const rate=44100,length=rate*3,bytes=new ArrayBuffer(44+length*2),v=new DataView(bytes);

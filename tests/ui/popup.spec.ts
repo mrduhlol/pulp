@@ -41,7 +41,7 @@ test('malformed stored settings are bounded before reaching audio controls',asyn
 });
 for(const width of [520,360])test(`all panels fit at ${width}px`,async({page})=>{
  await page.setViewportSize({width,height:600});await page.goto(pageUrl);await page.evaluate(()=>document.fonts.ready);
- for(const name of ['Equalizer','Sound','Profiles']){
+ for(const name of ['Equalizer','Sound','Profiles','Spatial']){
   await page.getByRole('tab',{name,exact:true}).click();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight)).toBe(true);
