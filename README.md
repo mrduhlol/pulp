@@ -1,28 +1,30 @@
+<p align="center">
+  <img src="docs/icon.svg" width="128" height="128" alt="Pulp app icon">
+</p>
+<p align="center">
+  <a href="https://github.com/mrduhlol/pulp/releases/latest/download/pulp-extension.zip"><img src="docs/download.svg" width="214" height="44" alt="Download Pulp ZIP"></a>
+</p>
+
 # Pulp
 
 ![Pulp music equalizer with a black interface, ten frequency sliders and sound presets](docs/pulp.png)
 
 ## Install
 
-Download or clone this repository, then run the following inside its folder with Node.js and npm installed:
-
-```sh
-npm ci
-npm run build
-```
+Click **Download Pulp ZIP** above and extract the downloaded ZIP into a folder.
 
 ### Chrome
 
 1. Open `chrome://extensions`.
 2. Enable **Developer mode**.
-3. Click **Load unpacked** and select the project's `dist` folder.
+3. Click **Load unpacked** and select the extracted extension folder.
 4. Play music on a website, then open **Pulp** from the extensions toolbar.
 
 ### Firefox
 
 1. Open `about:debugging#/runtime/this-firefox`.
 2. Click **Load Temporary Add-on**.
-3. Select `dist/manifest.json`.
+3. Select `manifest.json` inside the extracted folder.
 4. Play music on a website, then open **Pulp** from the extensions toolbar.
 
 Firefox removes temporary add-ons when it restarts. Repeat these steps to load Pulp again.
