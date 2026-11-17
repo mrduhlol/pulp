@@ -1,6 +1,6 @@
 declare const chrome: any;
-type Settings = {enabled:boolean;bands:number[];bass:number;treble:number;volume:number;balance:number;limiter:boolean;preset:string};
-const defaults:Settings = {enabled:true,bands:Array(10).fill(0),bass:0,treble:0,volume:80,balance:0,limiter:true,preset:'Flat'};
+type Settings = {enabled:boolean;bands:number[];bass:number;treble:number;volume:number;balance:number;limiter:boolean;autoHeadroom:boolean;preset:string};
+const defaults:Settings = {enabled:true,bands:Array(10).fill(0),bass:0,treble:0,volume:80,balance:0,limiter:true,autoHeadroom:true,preset:'Flat'};
 const profiles:Record<string,number[]> = {'Flat':[0,0,0,0,0,0,0,0,0,0],'Warm':[3,4,3,1,0,-1,-2,-2,-1,0],'Bass boost':[7,6,4,2,0,0,0,1,1,0],'Vocal':[-3,-2,-1,0,2,4,4,2,0,-1],'Electronic':[5,4,1,-2,-2,1,2,3,4,4],'Rock':[4,3,1,-1,-2,1,3,4,3,2],'Jazz':[3,2,1,2,-1,-1,0,2,3,3],'Acoustic':[2,2,1,0,1,2,3,3,2,1]};
 let state:Settings = structuredClone(defaults);
 let custom:Settings | undefined;
@@ -10,7 +10,7 @@ const installed = typeof chrome !== 'undefined' && !!chrome.storage?.local;
 const clamp = (value:unknown,min:number,max:number,fallback=0) => typeof value==='number' && Number.isFinite(value) ? Math.max(min,Math.min(max,value)) : fallback;
 function normalize(value:Partial<Settings> | null | undefined):Settings {
  const next=value || {};
- return {enabled:typeof next.enabled==='boolean'?next.enabled:true,limiter:typeof next.limiter==='boolean'?next.limiter:true,bands:defaults.bands.map((_,i)=>clamp(next.bands?.[i],-12,12)),bass:clamp(next.bass,0,12),treble:clamp(next.treble,0,12),volume:clamp(next.volume,0,100,80),balance:clamp(next.balance,-100,100),preset:typeof next.preset==='string' && (profiles[next.preset] || ['Custom','Saved profile'].includes(next.preset))?next.preset:'Custom'};
+ return {autoHeadroom:next.autoHeadroom!==false,enabled:typeof next.enabled==='boolean'?next.enabled:true,limiter:typeof next.limiter==='boolean'?next.limiter:true,bands:defaults.bands.map((_,i)=>clamp(next.bands?.[i],-12,12)),bass:clamp(next.bass,0,12),treble:clamp(next.treble,0,12),volume:clamp(next.volume,0,100,80),balance:clamp(next.balance,-100,100),preset:typeof next.preset==='string' && (profiles[next.preset] || ['Custom','Saved profile'].includes(next.preset))?next.preset:'Custom'};
 }
 function curve(bands:number[],width=400,height=64){return bands.map((gain,i)=>`${i?'L':'M'}${i*width/9} ${height/2-gain*(height/28)}`).join(' ');}
 ['32','64','125','250','500','1k','2k','4k','8k','16k'].forEach((frequency,i) => {
@@ -25,6 +25,7 @@ for(const [name,bands] of Object.entries(profiles)){
 }
 function render(){
  el('power').setAttribute('aria-pressed',String(state.enabled));el('power').setAttribute('aria-label',state.enabled?'Bypass equalizer':'Enable equalizer');el('power-label').textContent=state.enabled?'On':'Off';document.querySelector('main')!.dataset.bypassed=String(!state.enabled);
+ el('headroom').setAttribute('aria-checked',String(state.autoHeadroom));
  el('limiter').setAttribute('aria-checked',String(state.limiter));preset.value=state.preset;
  document.querySelectorAll<HTMLInputElement>('[data-band]').forEach((input,i)=>{input.value=String(state.bands[i]);el(`band-${i}`).textContent=state.bands[i]>0?`+${state.bands[i]}`:String(state.bands[i]);input.setAttribute('aria-valuetext',`${state.bands[i]} decibels`);});
  for(const key of ['bass','treble','volume','balance'] as const){const input=el<HTMLInputElement>(key);input.value=String(state[key]);input.style.setProperty('--fill',`${(state[key]-Number(input.min))/(Number(input.max)-Number(input.min))*100}%`);const text=key==='volume'?`${state[key]}%`:key==='balance'?(state[key]===0?'Center':`${Math.abs(state[key])}% ${state[key]<0?'left':'right'}`):`${state[key]} dB`;el(`${key}-value`).textContent=text;input.setAttribute('aria-valuetext',text);}
@@ -65,7 +66,7 @@ async function connect(){
  }catch{connectionError();}
 }
 for(const key of ['bass','treble','volume','balance'] as const)el<HTMLInputElement>(key).addEventListener('input',event=>{state[key]=Number((event.target as HTMLInputElement).value);changed();});
-el('power').onclick=()=>{state.enabled=!state.enabled;changed();};el('limiter').onclick=()=>{state.limiter=!state.limiter;changed();};
+el('power').onclick=()=>{state.enabled=!state.enabled;changed();};el('headroom').onclick=()=>{state.autoHeadroom=!state.autoHeadroom;changed();};el('limiter').onclick=()=>{state.limiter=!state.limiter;changed();};
 function chooseProfile(name:string){if(profiles[name]){state.bands=[...profiles[name]];state.preset=name;changed();}else if(name==='Saved profile'&&custom){state=structuredClone(custom);state.preset=name;changed();}}
 preset.onchange=()=>chooseProfile(preset.value);
 document.querySelectorAll<HTMLElement>('[data-profile]').forEach(button=>button.onclick=()=>chooseProfile(button.dataset.profile!));
