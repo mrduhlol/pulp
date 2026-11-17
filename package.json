@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node build.mjs",
     "check": "tsc --noEmit",
-    "test": "node tests/engine.mjs && playwright test"
+    "test": "node tests/engine.mjs && node tests/content.mjs && playwright test"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",

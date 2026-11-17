@@ -1,0 +1,12 @@
+import vm from 'node:vm';
+import {readFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
+const applied=[];let listener;
+const settings={enabled:true,bands:Array(10).fill(3),spatialEnabled:false};
+const sandbox={location:{origin:'https://music.test'},__pulp:{apply:next=>applied.push(next)},chrome:{storage:{local:{get:async key=>({[key]:settings})},onChanged:{addListener:callback=>listener=callback}}}};
+vm.createContext(sandbox);vm.runInContext(readFileSync('dist/content.js','utf8'),sandbox);await Promise.resolve();
+assert.equal(applied[0],settings,'restore exact-origin settings without opening popup');
+listener({'site:https://other.test':{newValue:settings}},'local');assert.equal(applied.length,1,'ignore other sites');
+listener({'site:https://music.test':{newValue:{...settings,volume:30}}},'local');assert.equal(applied.at(-1).volume,30,'sync live site changes');
+listener({'site:https://music.test':{}},'local');assert.equal(applied.at(-1).enabled,false,'site removal bypasses automatic processing');
+console.log('PASS: automatic site restoration, origin isolation, sync and removal');
