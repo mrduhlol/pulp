@@ -38,7 +38,7 @@ function render(){
  el('limiter').setAttribute('aria-checked',String(state.limiter));preset.value=state.preset;
  document.querySelectorAll<HTMLInputElement>('[data-band]').forEach((input,i)=>{input.value=String(state.bands[i]);el(`band-${i}`).textContent=state.bands[i]>0?`+${state.bands[i]}`:String(state.bands[i]);input.setAttribute('aria-valuetext',`${state.bands[i]} decibels`);});
  for(const key of ['bass','treble','volume','balance'] as const){const input=el<HTMLInputElement>(key);input.value=String(state[key]);input.style.setProperty('--fill',`${(state[key]-Number(input.min))/(Number(input.max)-Number(input.min))*100}%`);const text=key==='volume'?`${state[key]}%`:key==='balance'?(state[key]===0?'Center':`${Math.abs(state[key])}% ${state[key]<0?'left':'right'}`):`${state[key]} dB`;el(`${key}-value`).textContent=text;input.setAttribute('aria-valuetext',text);}
- for(const key of ['bass','treble'] as const)el(`${key}-dial`).style.setProperty('--angle',`${-135+state[key]/12*270}deg`);
+ for(const key of ['bass','treble'] as const){el(`${key}-dial`).style.setProperty('--angle',`${-135+state[key]/12*270}deg`);el(`${key}-dial`).setAttribute('aria-valuenow',String(state[key]));el(`${key}-dial`).setAttribute('aria-valuetext',`${state[key]} decibels`);}
  const path=curve(state.bands);el('curve').setAttribute('d',path);el('curve-area').setAttribute('d',`${path} L400 64 L0 64 Z`);
  document.querySelectorAll<HTMLElement>('[data-profile]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.profile===state.preset)));
  el<HTMLButtonElement>('load-custom').disabled=!custom;el('load-custom').textContent=custom?'Load saved profile':'Bookmark your settings to save a profile';
@@ -137,3 +137,13 @@ el('remember-site').onclick=async()=>{
   render();el('message').textContent=rememberSite?'Settings will load automatically on this site.':'Automatic settings removed for this site.';
  }catch{el('message').textContent='Could not update site settings. Try again.';}
 };
+
+for(const key of ['bass','treble'] as const){
+ const dial=el(`${key}-dial`);dial.removeAttribute('aria-hidden');dial.setAttribute('role','slider');dial.tabIndex=0;dial.setAttribute('aria-label',key==='bass'?'Bass boost knob':'Treble knob');dial.setAttribute('aria-valuemin','0');dial.setAttribute('aria-valuemax','12');
+ let startY=0,startValue=0,active:number|undefined;
+ dial.onpointerdown=event=>{if(event.button!==0)return;event.preventDefault();dial.focus();startY=event.clientY;startValue=state[key];active=event.pointerId;dial.setPointerCapture(active);};
+ dial.onpointermove=event=>{if(active!==event.pointerId)return;state[key]=Math.round(clamp(startValue+(startY-event.clientY)/8,0,12));changed();};
+ const end=()=>{active=undefined;};dial.onpointerup=end;dial.onpointercancel=end;dial.onlostpointercapture=end;
+ dial.onclick=event=>event.preventDefault();dial.ondblclick=event=>{event.preventDefault();state[key]=0;changed();};
+ dial.onkeydown=event=>{const delta=event.key==='ArrowUp'||event.key==='ArrowRight'?1:event.key==='ArrowDown'||event.key==='ArrowLeft'?-1:event.key==='PageUp'?3:event.key==='PageDown'?-3:0;if(delta||event.key==='Home'||event.key==='End'){event.preventDefault();state[key]=event.key==='Home'?0:event.key==='End'?12:clamp(state[key]+delta,0,12);changed();}};
+}
