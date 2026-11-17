@@ -4,6 +4,8 @@ const defaults:Settings = {enabled:true,bands:Array(10).fill(0),bass:0,treble:0,
 const profiles:Record<string,number[]> = {'Flat':[0,0,0,0,0,0,0,0,0,0],'Warm':[3,4,3,1,0,-1,-2,-2,-1,0],'Bass boost':[7,6,4,2,0,0,0,1,1,0],'Vocal':[-3,-2,-1,0,2,4,4,2,0,-1],'Electronic':[5,4,1,-2,-2,1,2,3,4,4],'Rock':[4,3,1,-1,-2,1,3,4,3,2],'Jazz':[3,2,1,2,-1,-1,0,2,3,3],'Acoustic':[2,2,1,0,1,2,3,3,2,1]};
 let state:Settings = structuredClone(defaults);
 let custom:Settings | undefined;
+let siteOrigin='';let rememberSite=false;
+function savedSettings(snapshot:Settings){return rememberSite&&siteOrigin?{settings:snapshot,[`site:${siteOrigin}`]:snapshot}:{settings:snapshot};}
 const el = <T extends HTMLElement>(id:string) => document.getElementById(id) as T;
 const preset = el<HTMLSelectElement>('preset');
 const installed = typeof chrome !== 'undefined' && !!chrome.storage?.local;
@@ -28,6 +30,7 @@ for(const [name,bands] of Object.entries(profiles)){
  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 90 35');svg.setAttribute('aria-hidden','true');const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',curve(bands,90,35));svg.append(path);const title=document.createElement('span');title.textContent=name;button.append(svg,title);el('profile-grid').append(button);
 }
 function render(){
+ el('remember-site').setAttribute('aria-pressed',String(rememberSite));el<HTMLButtonElement>('remember-site').disabled=!siteOrigin;
  el('power').setAttribute('aria-pressed',String(state.enabled));el('power').setAttribute('aria-label',state.enabled?'Bypass equalizer':'Enable equalizer');el('power-label').textContent=state.enabled?'On':'Off';document.querySelector('main')!.dataset.bypassed=String(!state.enabled);
  el('headroom').setAttribute('aria-checked',String(state.autoHeadroom));
  el('limiter').setAttribute('aria-checked',String(state.limiter));preset.value=state.preset;
@@ -46,7 +49,7 @@ function changed(){
  if(!installed)return;
  if(connectedTab!==undefined)void sendAudio(state);
  el('save-status').textContent='SAVING';clearTimeout(saveTimer);
- saveTimer=setTimeout(()=>{const snapshot=structuredClone(state);queue=queue.then(async()=>{try{await chrome.storage.local.set({settings:snapshot});el('save-status').textContent='LOCAL ONLY';}catch{el('save-status').textContent='NOT SAVED';el('message').textContent='Settings could not be saved. Reopen Pulp to retry.';}});},90);
+ saveTimer=setTimeout(()=>{const snapshot=structuredClone(state);queue=queue.then(async()=>{try{await chrome.storage.local.set(savedSettings(snapshot));el('save-status').textContent='LOCAL ONLY';}catch{el('save-status').textContent='NOT SAVED';el('message').textContent='Settings could not be saved. Reopen Pulp to retry.';}});},90);
 }
 function connectionError(){el('status').textContent='Cannot connect to this page';el('source').textContent='Open a music website, then reopen Pulp.';el('dot').style.background='#777';}
 function dispatchAudio(settings:Settings){
@@ -64,6 +67,8 @@ async function sendAudio(settings:Settings){
 async function connect(){
  try{
   const [tab]=await chrome.tabs.query({active:true,currentWindow:true});if(!tab?.id)throw Error();
+  try{const url=new URL(tab.url);if(['https:','http:'].includes(url.protocol))siteOrigin=url.origin;}catch{}
+  if(siteOrigin){const key=`site:${siteOrigin}`,stored=await chrome.storage.local.get(key);rememberSite=!!stored[key];if(rememberSite)state=normalize(stored[key]);render();}
   await chrome.scripting.executeScript({target:{tabId:tab.id},files:['engine.js']});
   connectedTab=tab.id;
   await sendAudio(state);
@@ -84,9 +89,24 @@ el('save-preset').onclick=async()=>{
 const tabs=Array.from(document.querySelectorAll<HTMLButtonElement>('[role=tab]'));
 function selectTab(tab:HTMLButtonElement){tabs.forEach(button=>{const selected=button===tab;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;el(button.getAttribute('aria-controls')!).hidden=!selected;});el('message').textContent='';}
 tabs.forEach((tab,index)=>{tab.onclick=()=>selectTab(tab);tab.onkeydown=event=>{let next=index;if(event.key==='ArrowRight')next=(index+1)%tabs.length;else if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=tabs.length-1;else return;event.preventDefault();selectTab(tabs[next]);tabs[next].focus();};});
-window.addEventListener('pagehide',()=>{if(installed){clearTimeout(saveTimer);void chrome.storage.local.set({settings:state});if(connectedTab!==undefined)void dispatchAudio(state).catch(()=>{});}});
+window.addEventListener('pagehide',()=>{if(installed){clearTimeout(saveTimer);void chrome.storage.local.set(savedSettings(state));if(connectedTab!==undefined)void dispatchAudio(state).catch(()=>{});}});
 (async()=>{
  if(!installed){render();el('status').textContent='Interface preview';el('source').textContent='Install Pulp to connect to your music tab.';return;}
  try{const stored=await chrome.storage.local.get(['settings','custom']);if(stored.custom){custom=normalize(stored.custom);addCustomOption();}state=stored.settings?normalize(stored.settings):structuredClone(defaults);render();await connect();}
  catch{render();el('status').textContent='Settings unavailable';el('source').textContent='Close and reopen Pulp to retry.';}
 })();
+
+el('remember-site').onclick=async()=>{
+ if(!installed||!siteOrigin)return;
+ const url=new URL(siteOrigin),pattern=`${url.protocol}//${url.hostname}/*`,id=`pulp-${Array.from(siteOrigin).map(c=>c.charCodeAt(0).toString(16)).join('')}`;
+ try{
+  if(rememberSite){await chrome.storage.local.remove(`site:${siteOrigin}`);await chrome.scripting.unregisterContentScripts({ids:[id]});rememberSite=false;await sendAudio(state);}
+  else{
+   if(!await chrome.permissions.request({origins:[pattern]})){el('message').textContent='Site permission declined. Settings remain available in the popup.';return;}
+   const registered=await chrome.scripting.getRegisteredContentScripts({ids:[id]});
+   if(!registered.length)await chrome.scripting.registerContentScripts([{id,matches:[pattern],js:['content.js'],runAt:'document_idle',persistAcrossSessions:true}]);
+   await chrome.storage.local.set({[`site:${siteOrigin}`]:state});rememberSite=true;
+  }
+  render();el('message').textContent=rememberSite?'Settings will load automatically on this site.':'Automatic settings removed for this site.';
+ }catch{el('message').textContent='Could not update site settings. Try again.';}
+};
