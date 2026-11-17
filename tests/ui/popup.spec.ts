@@ -3,8 +3,9 @@ import {resolve} from 'node:path';
 const pageUrl='file://'+resolve('dist/popup.html');
 test('profiles, sound controls, bypass and keyboard tabs work and persist',async({page})=>{
  await page.addInitScript(()=>{
+  (window as any).__audioUpdates=[];
   const local={get:async()=>JSON.parse(localStorage.getItem('pulp-test')||'{}'),set:async(value:object)=>localStorage.setItem('pulp-test',JSON.stringify({...JSON.parse(localStorage.getItem('pulp-test')||'{}'),...value}))};
-  (window as any).chrome={storage:{local},tabs:{query:async()=>[{id:1}]},scripting:{executeScript:async()=>[{result:{connected:1,media:1,title:'Test music'}}]}};
+  (window as any).chrome={storage:{local},tabs:{query:async()=>[{id:1}]},scripting:{executeScript:async(request:any)=>{if(request.args)(window as any).__audioUpdates.push(request.args[0]);return [{result:{connected:1,media:1,title:'Test music'}}]}}};
  });
  await page.goto(pageUrl);
  await expect(page.locator('#status')).toHaveText('Connected to this tab');
@@ -22,6 +23,7 @@ test('profiles, sound controls, bypass and keyboard tabs work and persist',async
  await expect(page.locator('#bass')).toHaveValue('8');
  await page.getByRole('button',{name:'Bypass equalizer',exact:true}).click();
  await expect(page.locator('#power')).toHaveAttribute('aria-pressed','false');
+ await expect.poll(()=>page.evaluate(()=>(window as any).__audioUpdates.at(-1)?.enabled)).toBe(false);
  await page.getByRole('tab',{name:'Sound',exact:true}).focus();
  await page.keyboard.press('ArrowRight');
  await expect(page.getByRole('tab',{name:'Profiles',exact:true})).toBeFocused();
@@ -46,6 +48,9 @@ for(const width of [520,360])test(`all panels fit at ${width}px`,async({page})=>
   const panel=await page.getByRole('tabpanel').boundingBox();const footer=await page.locator('footer').boundingBox();
   expect(panel!.y+panel!.height).toBeLessThanOrEqual(footer!.y);
   if(name==='Equalizer'){const quick=await page.locator('.quick-profiles').boundingBox();expect(quick!.y+quick!.height).toBeLessThanOrEqual(footer!.y);}
+  await page.getByRole('button',{name:'Save custom profile',exact:true}).click();
+  expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight)).toBe(true);
+  await expect(page.locator('#message')).not.toBeEmpty();
   await page.screenshot({path:`artifacts/review/${width}-${name.toLowerCase()}.png`});
  }
 });

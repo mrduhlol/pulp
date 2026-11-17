@@ -34,23 +34,35 @@ function render(){
  el<HTMLButtonElement>('load-custom').disabled=!custom;el('load-custom').textContent=custom?'Load saved profile':'Bookmark your settings to save a profile';
 }
 let saveTimer:ReturnType<typeof setTimeout>;
+let connectedTab:number | undefined;
 let queue=Promise.resolve();
 function changed(){
  render();el('message').textContent='';
  if(!installed)return;
+ if(connectedTab!==undefined)void sendAudio(state);
  el('save-status').textContent='SAVING';clearTimeout(saveTimer);
- saveTimer=setTimeout(()=>{const snapshot=structuredClone(state);queue=queue.then(async()=>{try{await chrome.storage.local.set({settings:snapshot});el('save-status').textContent='LOCAL ONLY';await apply(snapshot);}catch{el('save-status').textContent='NOT SAVED';el('message').textContent='Settings could not be saved. Reopen Pulp to retry.';}});},90);
+ saveTimer=setTimeout(()=>{const snapshot=structuredClone(state);queue=queue.then(async()=>{try{await chrome.storage.local.set({settings:snapshot});el('save-status').textContent='LOCAL ONLY';}catch{el('save-status').textContent='NOT SAVED';el('message').textContent='Settings could not be saved. Reopen Pulp to retry.';}});},90);
 }
-async function apply(settings:Settings){
+function connectionError(){el('status').textContent='Cannot connect to this page';el('source').textContent='Open a music website, then reopen Pulp.';el('dot').style.background='#777';}
+function dispatchAudio(settings:Settings){
+ return chrome.scripting.executeScript({target:{tabId:connectedTab},func:(next:Settings)=>(globalThis as any).__pulp.apply(next),args:[structuredClone(settings)]});
+}
+async function sendAudio(settings:Settings){
  try{
-  const [tab]=await chrome.tabs.query({active:true,currentWindow:true});if(!tab?.id)throw Error();
-  await chrome.scripting.executeScript({target:{tabId:tab.id},files:['engine.js']});
-  const [result]=await chrome.scripting.executeScript({target:{tabId:tab.id},func:(next:Settings)=>(globalThis as any).__pulp.apply(next),args:[settings]});
+  const [result]=await dispatchAudio(settings);
   const data=result.result;
   el('status').textContent=data.connected?(settings.enabled?'Connected to this tab':'Equalizer bypassed'):data.media?'Player not supported':'No music detected';
   el('source').textContent=data.connected?data.title:data.media?'Protected or cross-origin audio. Try another player.':'Start playback, then reopen Pulp.';
   el('dot').style.background=data.connected&&settings.enabled?'#d5fa7d':'#777';
- }catch{el('status').textContent='Cannot connect to this page';el('source').textContent='Open a music website, then reopen Pulp.';el('dot').style.background='#777';}
+ }catch{connectionError();}
+}
+async function connect(){
+ try{
+  const [tab]=await chrome.tabs.query({active:true,currentWindow:true});if(!tab?.id)throw Error();
+  await chrome.scripting.executeScript({target:{tabId:tab.id},files:['engine.js']});
+  connectedTab=tab.id;
+  await sendAudio(state);
+ }catch{connectionError();}
 }
 for(const key of ['bass','treble','volume','balance'] as const)el<HTMLInputElement>(key).addEventListener('input',event=>{state[key]=Number((event.target as HTMLInputElement).value);changed();});
 el('power').onclick=()=>{state.enabled=!state.enabled;changed();};el('limiter').onclick=()=>{state.limiter=!state.limiter;changed();};
@@ -67,9 +79,9 @@ el('save-preset').onclick=async()=>{
 const tabs=Array.from(document.querySelectorAll<HTMLButtonElement>('[role=tab]'));
 function selectTab(tab:HTMLButtonElement){tabs.forEach(button=>{const selected=button===tab;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;el(button.getAttribute('aria-controls')!).hidden=!selected;});el('message').textContent='';}
 tabs.forEach((tab,index)=>{tab.onclick=()=>selectTab(tab);tab.onkeydown=event=>{let next=index;if(event.key==='ArrowRight')next=(index+1)%tabs.length;else if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=tabs.length-1;else return;event.preventDefault();selectTab(tabs[next]);tabs[next].focus();};});
-window.addEventListener('pagehide',()=>{if(installed){clearTimeout(saveTimer);void chrome.storage.local.set({settings:state});}});
+window.addEventListener('pagehide',()=>{if(installed){clearTimeout(saveTimer);void chrome.storage.local.set({settings:state});if(connectedTab!==undefined)void dispatchAudio(state).catch(()=>{});}});
 (async()=>{
  if(!installed){render();el('status').textContent='Interface preview';el('source').textContent='Install Pulp to connect to your music tab.';return;}
- try{const stored=await chrome.storage.local.get(['settings','custom']);if(stored.custom){custom=normalize(stored.custom);addCustomOption();}state=stored.settings?normalize(stored.settings):structuredClone(defaults);render();await apply(state);}
+ try{const stored=await chrome.storage.local.get(['settings','custom']);if(stored.custom){custom=normalize(stored.custom);addCustomOption();}state=stored.settings?normalize(stored.settings):structuredClone(defaults);render();await connect();}
  catch{render();el('status').textContent='Settings unavailable';el('source').textContent='Close and reopen Pulp to retry.';}
 })();
