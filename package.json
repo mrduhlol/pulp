@@ -1,1 +1,16 @@
-{"name":"pulp-equalizer","version":"1.0.0","private":true,"type":"module","scripts":{"build":"node build.mjs","check":"tsc --noEmit"},"devDependencies":{"esbuild":"^0.25.0","typescript":"^5.9.0"}}
+{
+  "name": "pulp-equalizer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "tsc --noEmit",
+    "test": "node tests/engine.mjs && playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.9.0"
+  }
+}

@@ -1,6 +1,39 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pulp · Music equalizer</title><link rel="stylesheet" href="popup.css"></head><body>
-<main><header><div class="identity"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><div><h1>Pulp<span>®</span></h1><p>A little more feeling.</p></div></div><button id="power" class="power" aria-label="Enable equalizer" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M12 3v9M6.3 5.7a9 9 0 1 0 11.4 0"/></svg></button></header>
-<section class="connection"><span id="dot"></span><div><strong id="status">Finding your music…</strong><p id="source">Play a song in this tab to get started.</p></div><span class="live">CURRENT TAB</span></section>
-<section class="equalizer"><div class="section-title"><h2>Make it yours.</h2><button id="reset" class="text-button">Reset all</button></div><div class="preset-row"><label for="preset">Sound profile</label><select id="preset"><option>Flat</option><option>Warm</option><option>Bass boost</option><option>Vocal</option><option>Electronic</option><option>Rock</option><option>Jazz</option><option>Acoustic</option><option>Custom</option></select></div><div class="graph" aria-hidden="true"><svg viewBox="0 0 400 62" preserveAspectRatio="none"><path id="curve" d="M0 31 L400 31"/></svg><span>+12 dB</span><span>−12 dB</span></div><div id="bands" class="bands"></div><div class="frequency-note"><span>LOW END</span><span>MIDS</span><span>DETAIL</span></div></section>
-<section class="tone"><div class="section-title"><h2>The finishing touches</h2><span>FINE TUNE</span></div><div class="tone-grid"><label class="control">Bass boost <output id="bass-value">0 dB</output><input id="bass" type="range" min="0" max="12" value="0"></label><label class="control">Brilliance <output id="treble-value">0 dB</output><input id="treble" type="range" min="0" max="12" value="0"></label></div><label class="control wide">Output level <output id="volume-value">80%</output><input id="volume" type="range" min="0" max="100" value="80"></label><label class="control wide">Stereo balance <output id="balance-value">Center</output><input id="balance" type="range" min="-100" max="100" value="0"><span class="ends"><span>L</span><span>R</span></span></label><div class="limiter"><div><strong>Peak protection</strong><p>Soften loud peaks when boosting your sound.</p></div><button id="limiter" class="switch" role="switch" aria-checked="true" aria-label="Peak protection"><span></span></button></div></section>
-<footer><span id="save-status">Settings saved on this device</span><button id="save-preset" class="text-button">Save profile</button></footer><p id="message" class="message" role="status"></p></main><script src="popup.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pulp · Music equalizer</title><link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<main>
+  <header>
+    <div class="brand"><h1>pulp<span class="brand-dot">.</span></h1><span class="brand-description">Music<br>equalizer.</span></div>
+    <div class="header-actions"><button id="save-preset" class="icon-button" aria-label="Save custom profile" title="Save custom profile"><svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4z"/></svg></button><button id="power" class="power" aria-label="Bypass equalizer" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M12 3v8M7 5a8 8 0 1 0 10 0"/></svg><span id="power-label">On</span></button></div>
+  </header>
+  <div class="tab-bar" role="tablist" aria-label="Audio controls">
+    <button id="tab-equalizer" role="tab" aria-selected="true" aria-controls="panel-equalizer" tabindex="0">Equalizer</button>
+    <button id="tab-sound" role="tab" aria-selected="false" aria-controls="panel-sound" tabindex="-1">Sound</button>
+    <button id="tab-profiles" role="tab" aria-selected="false" aria-controls="panel-profiles" tabindex="-1">Profiles</button>
+    <span class="tab-caption">10 BAND / ±12 dB</span>
+  </div>
+  <section id="panel-equalizer" role="tabpanel" aria-labelledby="tab-equalizer">
+    <div class="eq-heading"><div><label for="preset">Sound profile</label><select id="preset"><option>Flat</option><option>Warm</option><option>Bass boost</option><option>Vocal</option><option>Electronic</option><option>Rock</option><option>Jazz</option><option>Acoustic</option><option disabled>Custom</option></select></div><button id="reset" class="quiet-button"><svg viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 8M4 4v6h6"/></svg>Reset</button></div>
+    <div class="graph" aria-label="Equalizer gain curve"><div class="graph-lines"><span>+12</span><span>0 dB</span><span>−12</span></div><svg viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="curve-fill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#d5fa7d" stop-opacity=".13"/><stop offset="1" stop-color="#d5fa7d" stop-opacity="0"/></linearGradient></defs><path id="curve-area"/><path id="curve"/></svg><span class="curve-caption">EQ RESPONSE</span></div>
+    <div id="bands" class="bands"></div>
+    <div class="frequency-note" aria-hidden="true"><span>Sub / bass</span><span>Midrange</span><span>Presence / air</span></div>
+    <div class="quick-profiles" aria-label="Quick presets"><button data-profile="Flat" aria-pressed="true">Flat</button><button data-profile="Bass boost" aria-pressed="false">Bass boost</button><button data-profile="Vocal" aria-pressed="false">Vocal</button><button data-profile="Electronic" aria-pressed="false">Electronic</button></div>
+  </section>
+  <section id="panel-sound" role="tabpanel" aria-labelledby="tab-sound" hidden>
+    <div class="panel-heading"><h2>Tone controls</h2><p>Tone, output & stereo.</p></div>
+    <div class="sound-grid">
+      <label class="control tone-control"><span>Bass boost</span><output id="bass-value">0 dB</output><div class="dial" id="bass-dial" aria-hidden="true"><span></span></div><input id="bass" type="range" min="0" max="12" value="0"><span class="range-ends"><span>0 dB</span><span>+12 dB</span></span></label>
+      <label class="control tone-control"><span>Treble</span><output id="treble-value">0 dB</output><div class="dial" id="treble-dial" aria-hidden="true"><span></span></div><input id="treble" type="range" min="0" max="12" value="0"><span class="range-ends"><span>0 dB</span><span>+12 dB</span></span></label>
+    </div>
+    <div class="output-controls"><label class="control"><span>Output</span><output id="volume-value">80%</output><input id="volume" type="range" min="0" max="100" value="80"></label><label class="control"><span>Balance</span><output id="balance-value">Center</output><input id="balance" type="range" min="-100" max="100" value="0"><span class="range-ends"><span>L</span><span>R</span></span></label></div>
+    <div class="limiter"><div><strong>Peak protection</strong><p>Softens peaks when boosting gain.</p></div><button id="limiter" class="switch" role="switch" aria-checked="true" aria-label="Peak protection"><span></span></button></div>
+  </section>
+  <section id="panel-profiles" role="tabpanel" aria-labelledby="tab-profiles" hidden><div class="panel-heading"><h2>Sound profiles</h2><p>Eight presets. One custom profile.</p></div><div id="profile-grid" class="profile-grid"></div><button id="load-custom" class="load-custom" disabled>Save a custom profile with the bookmark button</button></section>
+  <footer><div class="connection"><span id="dot"></span><div><strong id="status" role="status">Connecting to this tab</strong><p id="source">Play music, then open Pulp.</p></div></div><span id="save-status">LOCAL ONLY</span></footer>
+  <p id="message" class="message" role="status"></p>
+</main><script src="popup.js"></script>
+</body></html>
