@@ -11,5 +11,6 @@ const settings={enabled:true,bands:[6,0,0,0,0,0,0,0,0,-3],bass:4,treble:2,volume
 assert.equal(sandbox.__pulp.apply(settings).connected,1,'skip cross-origin and DRM media');
 const filters=nodes.filter(n=>n.type==='peaking');assert.equal(filters.length,10);assert.equal(filters[0].gain.value,6);assert.equal(filters[9].gain.value,-3);
 assert.equal(nodes.find(n=>n.type==='lowshelf').gain.value,4);
+media.push({src:'https://cdn.test/song.mp3',crossOrigin:'anonymous'});assert.equal(sandbox.__pulp.apply(settings).connected,2,'CORS-enabled CDN audio is supported');
 const count=nodes.length;sandbox.__pulp.apply({...settings,enabled:false});assert.equal(nodes.length,count,'reuse existing graph');assert.ok(filters.every(n=>n.gain.value===0),'bypass resets EQ');
 console.log('PASS: safe media selection, ten bands, gain updates, graph reuse and bypass');

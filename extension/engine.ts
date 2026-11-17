@@ -8,10 +8,10 @@ type Graph = {filters:BiquadFilterNode[];bass:BiquadFilterNode;treble:BiquadFilt
   let context: AudioContext | undefined;
   let settings = {enabled:true, bands:Array(10).fill(0), bass:0, treble:0, volume:80, balance:0, limiter:true};
   function eligible(media: HTMLMediaElement) {
-    if (media.mediaKeys || media.srcObject) return false;
+    if (media.mediaKeys || media.srcObject || media.error) return false;
     const src = media.currentSrc || media.src;
     if (!src) return false;
-    try { return src.startsWith('blob:') || new URL(src, location.href).origin === location.origin; }
+    try { return src.startsWith('blob:') || src.startsWith('data:audio/') || media.crossOrigin === 'anonymous' || media.crossOrigin === 'use-credentials' || new URL(src, location.href).origin === location.origin; }
     catch { return false; }
   }
   function update(graph: Graph) {
@@ -47,5 +47,7 @@ type Graph = {filters:BiquadFilterNode[];bass:BiquadFilterNode;treble:BiquadFilt
     return {connected:graphs.size, media:document.querySelectorAll<HTMLMediaElement>('audio,video').length, title:document.title};
   }};
   document.addEventListener('play',attach,true);
+  document.addEventListener('loadedmetadata',attach,true);
+  if (typeof MutationObserver !== 'undefined') new MutationObserver(() => { if ([...document.querySelectorAll<HTMLMediaElement>('audio,video')].some(media => !media.paused)) attach(); }).observe(document.documentElement,{childList:true,subtree:true});
   document.addEventListener('pointerdown',() => context?.resume().catch(() => {}),true);
 })();
