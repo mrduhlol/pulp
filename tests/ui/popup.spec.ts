@@ -54,3 +54,9 @@ for(const width of [520,360])test(`all panels fit at ${width}px`,async({page})=>
   await page.screenshot({path:`artifacts/review/${width}-${name.toLowerCase()}.png`});
  }
 });
+
+test('faders expose frequency feedback and double-click reset',async({page})=>{
+ await page.goto(pageUrl);await page.locator('#frequency-3').fill('6');
+ await expect(page.locator('#fader-feedback')).toHaveText('250 Hz · +6 dB');
+ await page.locator('#frequency-3').dblclick();await expect(page.locator('#frequency-3')).toHaveValue('0');
+});

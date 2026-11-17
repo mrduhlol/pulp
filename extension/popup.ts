@@ -17,7 +17,11 @@ function curve(bands:number[],width=400,height=64){return bands.map((gain,i)=>`$
  const label=document.createElement('label');label.className='band';
  const output=document.createElement('output'),input=document.createElement('input'),caption=document.createElement('span');
  input.type='range';input.min='-12';input.max='12';input.value='0';input.id=`frequency-${i}`;input.setAttribute('aria-label',`${[32,64,125,250,500,1000,2000,4000,8000,16000][i]} hertz gain`);input.dataset.band=String(i);output.id=`band-${i}`;output.htmlFor=input.id;caption.textContent=frequency;
- input.addEventListener('input',()=>{state.bands[i]=Number(input.value);state.preset='Custom';changed();});label.append(output,input,caption);el('bands').append(label);
+ const feedback=()=>{el('fader-feedback').textContent=`${frequency} Hz · ${Number(input.value)>0?'+':''}${input.value} dB`;};
+ input.title=`${frequency} Hz. Double-click to reset.`;
+ input.addEventListener('focus',feedback);input.addEventListener('pointerdown',feedback);
+ input.addEventListener('dblclick',()=>{state.bands[i]=0;state.preset='Custom';changed();feedback();});
+ input.addEventListener('input',()=>{state.bands[i]=Number(input.value);state.preset='Custom';changed();feedback();});label.append(output,input,caption);el('bands').append(label);
 });
 for(const [name,bands] of Object.entries(profiles)){
  const button=document.createElement('button');button.className='profile-card';button.dataset.profile=name;button.setAttribute('aria-pressed','false');
