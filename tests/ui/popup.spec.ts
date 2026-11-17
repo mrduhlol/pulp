@@ -47,6 +47,14 @@ for(const width of [520,360])test(`all panels fit at ${width}px`,async({page})=>
   expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight)).toBe(true);
   const panel=await page.getByRole('tabpanel').boundingBox();const footer=await page.locator('footer').boundingBox();
   expect(panel!.y+panel!.height).toBeLessThanOrEqual(footer!.y);
+  if(name==='Sound'||name==='Spatial'){
+   const controls=page.getByRole('tabpanel').locator('p,button,input,select');
+   for(const control of await controls.all()){
+    if(!await control.isVisible())continue;const bounds=(await control.boundingBox())!;
+    expect(bounds.x+bounds.width).toBeLessThanOrEqual(panel!.x+panel!.width+1);
+    expect(bounds.y+bounds.height).toBeLessThanOrEqual(panel!.y+panel!.height+1);
+   }
+  }
   if(name==='Equalizer'){const quick=await page.locator('.quick-profiles').boundingBox();expect(quick!.y+quick!.height).toBeLessThanOrEqual(footer!.y);}
   await page.getByRole('button',{name:'Save custom profile',exact:true}).click();
   expect(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight)).toBe(true);
