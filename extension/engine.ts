@@ -1,5 +1,6 @@
-type AudioSettings = {enabled:boolean;bands:number[];bass:number;treble:number;volume:number;balance:number;limiter:boolean;autoHeadroom?:boolean};
-type Graph = {preamp:GainNode;probe:BiquadFilterNode;filters:BiquadFilterNode[];bass:BiquadFilterNode;treble:BiquadFilterNode;gain:GainNode;pan:StereoPannerNode;compressor:DynamicsCompressorNode};
+import {createSpatial} from './spatial';
+type AudioSettings = {enabled:boolean;bands:number[];bass:number;treble:number;volume:number;balance:number;limiter:boolean;autoHeadroom?:boolean;spatialEnabled?:boolean;spatialWidth?:number;spatialHeadphones?:boolean};
+type Graph = {spatial:ReturnType<typeof createSpatial>;preamp:GainNode;probe:BiquadFilterNode;filters:BiquadFilterNode[];bass:BiquadFilterNode;treble:BiquadFilterNode;gain:GainNode;pan:StereoPannerNode;compressor:DynamicsCompressorNode};
 // Runs only in the selected tab after the user opens Pulp.
 (() => {
   if ((globalThis as typeof globalThis & {__pulp?: {apply: (next: AudioSettings) => unknown}}).__pulp) return;
@@ -27,6 +28,7 @@ type Graph = {preamp:GainNode;probe:BiquadFilterNode;filters:BiquadFilterNode[];
       peak=Math.max(1,...total);
     }
     graph.preamp.gain.setTargetAtTime(1/peak,context!.currentTime,.025);
+    graph.spatial.set(on && settings.spatialEnabled===true,settings.spatialWidth??50,settings.spatialHeadphones===true);
     graph.gain.gain.value = on ? settings.volume / 100 : 1;
     graph.pan.pan.value = on ? settings.balance / 100 : 0;
     graph.compressor.threshold.value = on && settings.limiter ? -6 : 0;
@@ -41,11 +43,13 @@ type Graph = {preamp:GainNode;probe:BiquadFilterNode;filters:BiquadFilterNode[];
         const filters = frequencies.map(frequency => new BiquadFilterNode(context!, {type:'peaking', frequency, Q:1.1}));
         const bass = new BiquadFilterNode(context!,{type:'lowshelf',frequency:120});
         const treble = new BiquadFilterNode(context!,{type:'highshelf',frequency:6000});
+        const spatial=createSpatial(context);
         const preamp=context.createGain();
         const gain = context.createGain(), pan = context.createStereoPanner(), compressor = context.createDynamicsCompressor();
-        const chain = [source,preamp,...filters,bass,treble,gain,pan,compressor,context.destination];
+        const chain = [source,preamp,...filters,bass,treble,spatial.input];
         chain.slice(0,-1).forEach((node,i) => node.connect(chain[i+1]));
-        const graph = {probe:new BiquadFilterNode(context),preamp,filters,bass,treble,gain,pan,compressor};
+        spatial.output.connect(gain);gain.connect(pan);pan.connect(compressor);compressor.connect(context.destination);
+        const graph = {spatial,probe:new BiquadFilterNode(context),preamp,filters,bass,treble,gain,pan,compressor};
         graphs.set(media,graph); update(graph);
       } catch { /* A site may already own this media element's source node. */ }
     }

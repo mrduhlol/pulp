@@ -1,6 +1,6 @@
 declare const chrome: any;
-type Settings = {enabled:boolean;bands:number[];bass:number;treble:number;volume:number;balance:number;limiter:boolean;autoHeadroom:boolean;preset:string};
-const defaults:Settings = {enabled:true,bands:Array(10).fill(0),bass:0,treble:0,volume:80,balance:0,limiter:true,autoHeadroom:true,preset:'Flat'};
+type Settings = {enabled:boolean;bands:number[];bass:number;treble:number;volume:number;balance:number;limiter:boolean;autoHeadroom:boolean;spatialEnabled:boolean;spatialWidth:number;spatialHeadphones:boolean;preset:string};
+const defaults:Settings = {enabled:true,bands:Array(10).fill(0),bass:0,treble:0,volume:80,balance:0,limiter:true,autoHeadroom:true,spatialEnabled:false,spatialWidth:50,spatialHeadphones:false,preset:'Flat'};
 const profiles:Record<string,number[]> = {'Flat':[0,0,0,0,0,0,0,0,0,0],'Warm':[3,4,3,1,0,-1,-2,-2,-1,0],'Bass boost':[7,6,4,2,0,0,0,1,1,0],'Vocal':[-3,-2,-1,0,2,4,4,2,0,-1],'Electronic':[5,4,1,-2,-2,1,2,3,4,4],'Rock':[4,3,1,-1,-2,1,3,4,3,2],'Jazz':[3,2,1,2,-1,-1,0,2,3,3],'Acoustic':[2,2,1,0,1,2,3,3,2,1]};
 let state:Settings = structuredClone(defaults);
 type UserPreset={id:string;name:string;settings:Settings};
@@ -14,7 +14,7 @@ const installed = typeof chrome !== 'undefined' && !!chrome.storage?.local;
 const clamp = (value:unknown,min:number,max:number,fallback=0) => typeof value==='number' && Number.isFinite(value) ? Math.max(min,Math.min(max,value)) : fallback;
 function normalize(value:Partial<Settings> | null | undefined):Settings {
  const next=value || {};
- return {autoHeadroom:next.autoHeadroom!==false,enabled:typeof next.enabled==='boolean'?next.enabled:true,limiter:typeof next.limiter==='boolean'?next.limiter:true,bands:defaults.bands.map((_,i)=>clamp(next.bands?.[i],-12,12)),bass:clamp(next.bass,0,12),treble:clamp(next.treble,0,12),volume:clamp(next.volume,0,100,80),balance:clamp(next.balance,-100,100),preset:typeof next.preset==='string' && (profiles[next.preset] || next.preset.startsWith('user:') || ['Custom','Saved profile'].includes(next.preset))?next.preset:'Custom'};
+ return {spatialEnabled:next.spatialEnabled===true,spatialWidth:clamp(next.spatialWidth,0,100,50),spatialHeadphones:next.spatialHeadphones===true,autoHeadroom:next.autoHeadroom!==false,enabled:typeof next.enabled==='boolean'?next.enabled:true,limiter:typeof next.limiter==='boolean'?next.limiter:true,bands:defaults.bands.map((_,i)=>clamp(next.bands?.[i],-12,12)),bass:clamp(next.bass,0,12),treble:clamp(next.treble,0,12),volume:clamp(next.volume,0,100,80),balance:clamp(next.balance,-100,100),preset:typeof next.preset==='string' && (profiles[next.preset] || next.preset.startsWith('user:') || ['Custom','Saved profile'].includes(next.preset))?next.preset:'Custom'};
 }
 function curve(bands:number[],width=400,height=64){return bands.map((gain,i)=>`${i?'L':'M'}${i*width/9} ${height/2-gain*(height/28)}`).join(' ');}
 ['32','64','125','250','500','1k','2k','4k','8k','16k'].forEach((frequency,i) => {
@@ -34,6 +34,7 @@ for(const [name,bands] of Object.entries(profiles)){
 function render(){
  el('remember-site').setAttribute('aria-pressed',String(rememberSite));el<HTMLButtonElement>('remember-site').disabled=!siteOrigin;
  el('power').setAttribute('aria-pressed',String(state.enabled));el('power').setAttribute('aria-label',state.enabled?'Bypass equalizer':'Enable equalizer');el('power-label').textContent=state.enabled?'On':'Off';document.querySelector('main')!.dataset.bypassed=String(!state.enabled);
+ el('spatial').setAttribute('aria-checked',String(state.spatialEnabled));el<HTMLInputElement>('spatial-width').value=String(state.spatialWidth);el('width-value').textContent=`${state.spatialWidth}%`;el<HTMLSelectElement>('spatial-mode').value=state.spatialHeadphones?'headphones':'width';el<HTMLInputElement>('spatial-width').disabled=!state.spatialEnabled;el<HTMLSelectElement>('spatial-mode').disabled=!state.spatialEnabled;
  el('headroom').setAttribute('aria-checked',String(state.autoHeadroom));
  el('limiter').setAttribute('aria-checked',String(state.limiter));preset.value=state.preset;
  document.querySelectorAll<HTMLInputElement>('[data-band]').forEach((input,i)=>{input.value=String(state.bands[i]);el(`band-${i}`).textContent=state.bands[i]>0?`+${state.bands[i]}`:String(state.bands[i]);input.setAttribute('aria-valuetext',`${state.bands[i]} decibels`);});
@@ -147,3 +148,7 @@ for(const key of ['bass','treble'] as const){
  dial.onclick=event=>event.preventDefault();dial.ondblclick=event=>{event.preventDefault();state[key]=0;changed();};
  dial.onkeydown=event=>{const delta=event.key==='ArrowUp'||event.key==='ArrowRight'?1:event.key==='ArrowDown'||event.key==='ArrowLeft'?-1:event.key==='PageUp'?3:event.key==='PageDown'?-3:0;if(delta||event.key==='Home'||event.key==='End'){event.preventDefault();state[key]=event.key==='Home'?0:event.key==='End'?12:clamp(state[key]+delta,0,12);changed();}};
 }
+
+el('spatial').onclick=()=>{state.spatialEnabled=!state.spatialEnabled;changed();};
+el<HTMLInputElement>('spatial-width').oninput=event=>{state.spatialWidth=Number((event.target as HTMLInputElement).value);changed();};
+el<HTMLSelectElement>('spatial-mode').onchange=event=>{state.spatialHeadphones=(event.target as HTMLSelectElement).value==='headphones';changed();};
