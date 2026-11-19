@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Pulp \u2014 Music Equalizer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A warm, ten-band music equalizer with presets, bass and balance controls.",
   "permissions": [
     "activeTab",
@@ -15,7 +15,12 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "pulp-equalizer@local.extension",
-      "strict_min_version": "128.0"
+      "strict_min_version": "128.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     }
   },
   "optional_host_permissions": [
