@@ -18,10 +18,12 @@
   </div>
   <section id="panel-equalizer" role="tabpanel" aria-labelledby="tab-equalizer">
     <div class="eq-heading"><div><label for="preset">Sound profile</label><select id="preset"><option>Flat</option><option>Warm</option><option>Bass boost</option><option>Vocal</option><option>Electronic</option><option>Rock</option><option>Jazz</option><option>Acoustic</option><option disabled>Custom</option></select></div><button id="reset" class="quiet-button"><svg viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 8M4 4v6h6"/></svg>Reset</button></div>
-    <div class="graph" aria-label="Equalizer gain curve"><div class="graph-lines"><span>+12</span><span>0 dB</span><span>−12</span></div><svg viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="curve-fill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#d5fa7d" stop-opacity=".13"/><stop offset="1" stop-color="#d5fa7d" stop-opacity="0"/></linearGradient></defs><path id="curve-area"/><path id="curve"/></svg><span id="fader-feedback" class="curve-caption" role="status">Double-click a fader to reset</span></div>
-    <div id="bands" class="bands"></div>
-    <div class="frequency-note" aria-hidden="true"><span>Sub / bass</span><span>Midrange</span><span>Presence / air</span></div>
-    <div class="quick-profiles" aria-label="Quick presets"><button data-profile="Flat" aria-pressed="true">Flat</button><button data-profile="Bass boost" aria-pressed="false">Bass boost</button><button data-profile="Vocal" aria-pressed="false">Vocal</button><button data-profile="Electronic" aria-pressed="false">Electronic</button></div></div>
+    <div class="eq-rack">
+      <div class="graph" role="img" aria-label="Equalizer gain curve"><div class="graph-lines"><span>+12</span><span>0 dB</span><span>−12</span></div><svg viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="curve-fill" x1="0%" y1="0%" x2="0%" y2="100%"><stop stop-color="#d5fa7d" stop-opacity=".13"/><stop offset="1" stop-color="#d5fa7d" stop-opacity="0"/></linearGradient></defs><path id="curve-area"/><path id="curve"/></svg></div>
+      <span id="fader-feedback" class="curve-caption" role="status">Double-click a fader to reset</span>
+      <div id="bands" class="bands"></div>
+    </div>
+    <div class="quick-profiles" aria-label="Quick presets"><button data-profile="Flat" aria-pressed="true">Flat</button><button data-profile="Bass boost" aria-pressed="false">Bass boost</button><button data-profile="Vocal" aria-pressed="false">Vocal</button><button data-profile="Electronic" aria-pressed="false">Electronic</button></div>
   </section>
   <section id="panel-sound" role="tabpanel" aria-labelledby="tab-sound" hidden>
     <div class="panel-heading"><h2>Tone controls</h2><p>Tone, output & stereo.</p></div>
