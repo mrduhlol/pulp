@@ -112,8 +112,12 @@ el<HTMLInputElement>('preset-file').onchange=async event=>{
  input.value='';
 };
 const tabs=Array.from(document.querySelectorAll<HTMLButtonElement>('[role=tab]'));
+const railLayout=window.matchMedia('(min-width: 470px)');
+function updateTabOrientation(){el('audio-tabs').setAttribute('aria-orientation',railLayout.matches?'vertical':'horizontal');}
+updateTabOrientation();
+railLayout.addEventListener('change',updateTabOrientation);
 function selectTab(tab:HTMLButtonElement){tabs.forEach(button=>{const selected=button===tab;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;el(button.getAttribute('aria-controls')!).hidden=!selected;});el('message').textContent='';}
-tabs.forEach((tab,index)=>{tab.onclick=()=>selectTab(tab);tab.onkeydown=event=>{let next=index;if(event.key==='ArrowRight')next=(index+1)%tabs.length;else if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=tabs.length-1;else return;event.preventDefault();selectTab(tabs[next]);tabs[next].focus();};});
+tabs.forEach((tab,index)=>{tab.onclick=()=>selectTab(tab);tab.onkeydown=event=>{let next=index;if((event.key==='ArrowRight'||(railLayout.matches&&event.key==='ArrowDown')))next=(index+1)%tabs.length;else if((event.key==='ArrowLeft'||(railLayout.matches&&event.key==='ArrowUp')))next=(index+tabs.length-1)%tabs.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=tabs.length-1;else return;event.preventDefault();selectTab(tabs[next]);tabs[next].focus();};});
 window.addEventListener('pagehide',()=>{if(installed){clearTimeout(saveTimer);void chrome.storage.local.set(savedSettings(state));if(connectedTab!==undefined)void dispatchAudio(state).catch(()=>{});}});
 (async()=>{
  if(!installed){render();el('status').textContent='Interface preview';el('source').textContent='Install Pulp to connect to your music tab.';return;}

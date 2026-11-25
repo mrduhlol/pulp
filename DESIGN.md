@@ -1,7 +1,7 @@
 # Pulp design
 
 ## Direction
-A compact studio console with a cobalt equalizer display and mint accents. The gain curve and faders share frequency columns and a dB scale. Space Grotesk is bundled locally under the SIL Open Font License.
+A compact studio rack with graphite panels and warm copper accents. Toolbar-width navigation runs down the left side and moves above the panel on narrower layouts. The gain curve and faders share frequency columns and a dB scale. Space Grotesk is bundled locally under the SIL Open Font License.
 
 ## Layout and behavior
 A 520px popup with four keyboard accessible tabs: Equalizer, Sound, Profiles and Spatial. The complete active panel and connection footer fit within the browser's 600px popup limit. At narrow preview widths the layout contracts without horizontal overflow.
