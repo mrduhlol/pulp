@@ -1,7 +1,7 @@
 # Pulp design
 
 ## Direction
-A compact equalizer with paper-white panels, black navigation, and red gain marks. Each fader uses a signed bar that extends from zero to its current gain. Space Grotesk is bundled locally under the SIL Open Font License.
+A chart-first equalizer with a coral gain curve on a deep blue plot. Two rows of blue-tinted control tiles show each frequency, its gain, and a compact horizontal slider. Each slider highlights gain relative to zero. Space Grotesk is bundled locally under the SIL Open Font License.
 
 ## Layout and behavior
 A 520px popup with four keyboard accessible tabs: Equalizer, Sound, Profiles and Spatial. The complete active panel and connection footer fit within the browser's 600px popup limit. At narrow preview widths the layout contracts without horizontal overflow.
