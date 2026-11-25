@@ -1,7 +1,7 @@
 # Pulp design
 
 ## Direction
-A compact studio rack with graphite panels and warm copper accents. Toolbar-width navigation runs down the left side and moves above the panel on narrower layouts. The gain curve and faders share frequency columns and a dB scale. Space Grotesk is bundled locally under the SIL Open Font License.
+A compact equalizer with paper-white panels, black navigation, and red gain marks. Each fader uses a signed bar that extends from zero to its current gain. Space Grotesk is bundled locally under the SIL Open Font License.
 
 ## Layout and behavior
 A 520px popup with four keyboard accessible tabs: Equalizer, Sound, Profiles and Spatial. The complete active panel and connection footer fit within the browser's 600px popup limit. At narrow preview widths the layout contracts without horizontal overflow.
@@ -12,6 +12,6 @@ Custom faders retain native range input keyboard behavior. Profile curves reflec
 The footer distinguishes connected, bypassed, no-media, unsupported-player and restricted-page states. Save errors remain visible. Preview mode allows local UI interaction without claiming audio processing or persistence. Reduced motion disables control transitions.
 
 ## Quality bar
-Readable text and clear selected states, no fabricated playback data, no page scrolling at 520×600, visible focus, complete keyboard tab and slider operation, and no remote asset requests.
+Readable text and a clear dB scale, no fabricated playback data, no page scrolling at 520×600, visible focus, complete keyboard tab and slider operation, and no remote asset requests.
 
 Profiles scrolls inside its panel to accommodate the named library and import/export controls. Spatial has its own panel so the audio controls stay readable. Feedback has a reserved area below the connection footer. Automatic headroom defaults on; spatial defaults off. Site memory is opt-in.

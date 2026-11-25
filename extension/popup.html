@@ -10,7 +10,7 @@
     <div class="brand"><h1>pulp<span class="brand-dot">.</span></h1><span class="brand-description">Music equalizer</span></div>
     <div class="header-actions"><button id="save-preset" class="icon-button" aria-label="Save custom profile" title="Save custom profile"><svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4z"/></svg></button><button id="power" class="power" aria-label="Bypass equalizer" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M12 3v8M7 5a8 8 0 1 0 10 0"/></svg><span id="power-label">On</span></button></div>
   </header>
-  <div id="audio-tabs" class="tab-bar" role="tablist" aria-label="Audio controls">
+  <div class="tab-bar" role="tablist" aria-label="Audio controls">
     <button id="tab-equalizer" role="tab" aria-selected="true" aria-controls="panel-equalizer" tabindex="0">Equalizer</button>
     <button id="tab-sound" role="tab" aria-selected="false" aria-controls="panel-sound" tabindex="-1">Sound</button>
     <button id="tab-profiles" role="tab" aria-selected="false" aria-controls="panel-profiles" tabindex="-1">Profiles</button>
@@ -19,10 +19,8 @@
   <section id="panel-equalizer" role="tabpanel" aria-labelledby="tab-equalizer">
     <div class="eq-heading"><div><label for="preset">Sound profile</label><select id="preset"><option>Flat</option><option>Warm</option><option>Bass boost</option><option>Vocal</option><option>Electronic</option><option>Rock</option><option>Jazz</option><option>Acoustic</option><option disabled>Custom</option></select></div><button id="reset" class="quiet-button"><svg viewBox="0 0 24 24"><path d="M4 10a8 8 0 1 1 1 8M4 4v6h6"/></svg>Reset</button></div>
     <div class="eq-rack">
-      <div class="eq-display">
-        <div class="graph" role="img" aria-label="Equalizer gain curve"><div class="graph-lines"><span>+12</span><span>0 dB</span><span>−12</span></div><svg viewBox="0 4.5714 400 54.8572" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="curve-fill" x1="0%" y1="0%" x2="0%" y2="100%"><stop stop-color="#ffab86" stop-opacity=".22"/><stop offset="1" stop-color="#ffab86" stop-opacity="0"/></linearGradient></defs><path id="curve-area"/><path id="curve"/></svg></div>
-        <div id="bands" class="bands"></div>
-      </div>
+      <div class="graph" role="img" aria-label="Equalizer gain curve"><div class="graph-lines"><span>+12</span><span>0 dB</span><span>−12</span></div><svg viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="curve-fill" x1="0%" y1="0%" x2="0%" y2="100%"><stop stop-color="#b72d24" stop-opacity=".13"/><stop offset="1" stop-color="#b72d24" stop-opacity="0"/></linearGradient></defs><path id="curve-area"/><path id="curve"/></svg></div>
+      <div id="bands" class="bands"></div>
       <span id="fader-feedback" class="curve-caption" role="status">Double-click a fader to reset</span>
     </div>
     <div class="quick-profiles" aria-label="Quick presets"><button data-profile="Flat" aria-pressed="true">Flat</button><button data-profile="Bass boost" aria-pressed="false">Bass boost</button><button data-profile="Vocal" aria-pressed="false">Vocal</button><button data-profile="Electronic" aria-pressed="false">Electronic</button></div>

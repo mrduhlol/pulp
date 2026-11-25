@@ -37,7 +37,12 @@ function render(){
  el('spatial').setAttribute('aria-checked',String(state.spatialEnabled));el<HTMLInputElement>('spatial-width').value=String(state.spatialWidth);el('width-value').textContent=`${state.spatialWidth}%`;el<HTMLSelectElement>('spatial-mode').value=state.spatialHeadphones?'headphones':'width';el<HTMLInputElement>('spatial-width').disabled=!state.spatialEnabled;el<HTMLSelectElement>('spatial-mode').disabled=!state.spatialEnabled;
  el('headroom').setAttribute('aria-checked',String(state.autoHeadroom));
  el('limiter').setAttribute('aria-checked',String(state.limiter));preset.value=state.preset;
- document.querySelectorAll<HTMLInputElement>('[data-band]').forEach((input,i)=>{input.value=String(state.bands[i]);el(`band-${i}`).textContent=state.bands[i]>0?`+${state.bands[i]}`:String(state.bands[i]);input.setAttribute('aria-valuetext',`${state.bands[i]} decibels`);});
+ document.querySelectorAll<HTMLInputElement>('[data-band]').forEach((input,i)=>{const gain=state.bands[i];
+  const position=(gain+12)/24*100;
+  input.value=String(gain);
+  input.style.setProperty('--gain-start', Math.min(50,position)+'%');
+  input.style.setProperty('--gain-end', Math.max(50,position)+'%');
+  el(`band-${i}`).textContent=state.bands[i]>0?`+${state.bands[i]}`:String(state.bands[i]);input.setAttribute('aria-valuetext',`${state.bands[i]} decibels`);});
  for(const key of ['bass','treble','volume','balance'] as const){const input=el<HTMLInputElement>(key);input.value=String(state[key]);input.style.setProperty('--fill',`${(state[key]-Number(input.min))/(Number(input.max)-Number(input.min))*100}%`);const text=key==='volume'?`${state[key]}%`:key==='balance'?(state[key]===0?'Center':`${Math.abs(state[key])}% ${state[key]<0?'left':'right'}`):`${state[key]} dB`;el(`${key}-value`).textContent=text;input.setAttribute('aria-valuetext',text);}
  for(const key of ['bass','treble'] as const){el(`${key}-dial`).style.setProperty('--angle',`${-135+state[key]/12*270}deg`);el(`${key}-dial`).setAttribute('aria-valuenow',String(state[key]));el(`${key}-dial`).setAttribute('aria-valuetext',`${state[key]} decibels`);}
  const path=curve(state.bands);el('curve').setAttribute('d',path);el('curve-area').setAttribute('d',`${path} L400 64 L0 64 Z`);
@@ -112,12 +117,8 @@ el<HTMLInputElement>('preset-file').onchange=async event=>{
  input.value='';
 };
 const tabs=Array.from(document.querySelectorAll<HTMLButtonElement>('[role=tab]'));
-const railLayout=window.matchMedia('(min-width: 470px)');
-function updateTabOrientation(){el('audio-tabs').setAttribute('aria-orientation',railLayout.matches?'vertical':'horizontal');}
-updateTabOrientation();
-railLayout.addEventListener('change',updateTabOrientation);
 function selectTab(tab:HTMLButtonElement){tabs.forEach(button=>{const selected=button===tab;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;el(button.getAttribute('aria-controls')!).hidden=!selected;});el('message').textContent='';}
-tabs.forEach((tab,index)=>{tab.onclick=()=>selectTab(tab);tab.onkeydown=event=>{let next=index;if((event.key==='ArrowRight'||(railLayout.matches&&event.key==='ArrowDown')))next=(index+1)%tabs.length;else if((event.key==='ArrowLeft'||(railLayout.matches&&event.key==='ArrowUp')))next=(index+tabs.length-1)%tabs.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=tabs.length-1;else return;event.preventDefault();selectTab(tabs[next]);tabs[next].focus();};});
+tabs.forEach((tab,index)=>{tab.onclick=()=>selectTab(tab);tab.onkeydown=event=>{let next=index;if(event.key==='ArrowRight')next=(index+1)%tabs.length;else if(event.key==='ArrowLeft')next=(index+tabs.length-1)%tabs.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=tabs.length-1;else return;event.preventDefault();selectTab(tabs[next]);tabs[next].focus();};});
 window.addEventListener('pagehide',()=>{if(installed){clearTimeout(saveTimer);void chrome.storage.local.set(savedSettings(state));if(connectedTab!==undefined)void dispatchAudio(state).catch(()=>{});}});
 (async()=>{
  if(!installed){render();el('status').textContent='Interface preview';el('source').textContent='Install Pulp to connect to your music tab.';return;}
